@@ -57,9 +57,9 @@ Milliseconds, average of 3 runs, from `java -cp out Bench`.
 
 | test | size | time |
 |---|---|---|
-| naive search | 20 000 / 40 000 / 80 000 | XX / XX / XX |
-| KMP | 20 000 / 40 000 / 80 000 | XX / XX / XX |
-| edit distance | 500 / 1000 / 2000 / 4000 | XX / XX / XX / XX |
+| naive search | 20 000 / 40 000 / 80 000 | 30.9 ms / 75.9 ms / 153.1 ms |
+| KMP | 20 000 / 40 000 / 80 000 | 1.8 ms / 0.8 ms / 0.4 ms |
+| edit distance | 500 / 1000 / 2000 / 4000 | 5.6 ms / 5.1 ms / 12.6 ms / 47.8 ms |
 
 The pattern has fixed length, so naive search and KMP both grow about 2 times when the text is 2 times longer. Naive search is much slower, because it makes about m steps at every position, KMP makes about 1. Edit distance grows about 4 times when the length is 2 times bigger, because the table has n * n cells. Small sizes are noisy because Java is still warming up.
 
