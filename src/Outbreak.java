@@ -1,33 +1,76 @@
 import java.util.*;
 
 /**
- * Mission 5. Dynamic programming on the tree of infections. Root the tree in person 0.
- * Input.Tree.neighbours() gives the neighbours of every person. The number of people is at most about 100, so a recursive DFS is fine here.
+ * Mission 5. Dynamic programming on the tree of infections. The tree is rooted in person 0.
  */
 public class Outbreak {
 
-    /**
-     * Choose people to test so that for every link (somebody infected somebody) at least one of the two is tested,
-     * and the total cost of testing is as small as possible. cost[v] is the price of testing person v.
-     * Returns tested[v] = true if person v is tested.
-     *
-     * State for every person v (looking only at v and everything below it): the smallest cost when v IS tested, and
-     * the smallest cost when v is NOT tested. What must then be true about the children of v in each case?
-     * Do not forget to rebuild the answer (who exactly is tested), not only the cost: the picture needs it.
-     * Main calls this twice: with all costs equal to 1 (the line "Tests needed") and with the real costs ("Cheapest testing").
-     */
-    public static boolean[] cheapestTests(int n, int[][] nb, int[] cost) {
-        // TODO Mission 5a
-        return new boolean[n];
+    /** Fills parent[] and returns the people in BFS order from person 0 (a parent comes before its children). */
+    private static int[] bfsOrder(int n, int[][] nb, int[] parent) {
+        int[] order = new int[n];
+        Arrays.fill(parent, -1);
+        int head = 0, tail = 0;
+        order[tail++] = 0;
+        while (head < tail) {
+            int v = order[head++];
+            for (int u : nb[v]) {
+                if (u != parent[v]) {
+                    parent[u] = v;
+                    order[tail++] = u;
+                }
+            }
+        }
+        return order;
     }
 
     /**
-     * The number of links on the longest chain of infections, that is the longest path in the tree (counted in links).
-     * A path goes up from one person and down to another; for every person you need the two longest ways down.
-     * Example: a line 0-1-2-3 has chain 3; a star with centre 0 and leaves 1, 2, 3 has chain 2.
+     * Tested people with the smallest total cost, so that every link has at least one tested person.
+     * take[v]: the cheapest cost of the subtree of v when v is tested.
+     * skip[v]: the cheapest cost of the subtree of v when v is not tested (all children must be tested).
+     */
+    public static boolean[] cheapestTests(int n, int[][] nb, int[] cost) {
+        if (n == 0) return new boolean[0];
+        int[] parent = new int[n];
+        int[] order = bfsOrder(n, nb, parent);
+        long[] take = new long[n], skip = new long[n];
+        for (int idx = n - 1; idx >= 0; idx--) {
+            int v = order[idx];
+            take[v] += cost[v];
+            int p = parent[v];
+            if (p >= 0) {
+                take[p] += Math.min(take[v], skip[v]);
+                skip[p] += take[v];
+            }
+        }
+        boolean[] tested = new boolean[n];
+        tested[0] = take[0] <= skip[0];
+        for (int idx = 1; idx < n; idx++) {
+            int v = order[idx];
+            tested[v] = !tested[parent[v]] || take[v] <= skip[v];
+        }
+        return tested;
+    }
+
+    /**
+     * The number of links on the longest path in the tree. For every person the two longest ways down
+     * are kept; the best path through the person is their sum.
      */
     public static int longestChain(int n, int[][] nb) {
-        // TODO Mission 5b
-        return -1;
+        if (n == 0) return 0;
+        int[] parent = new int[n];
+        int[] order = bfsOrder(n, nb, parent);
+        int[] first = new int[n], second = new int[n];
+        int best = 0;
+        for (int idx = n - 1; idx >= 0; idx--) {
+            int v = order[idx];
+            best = Math.max(best, first[v] + second[v]);
+            int p = parent[v];
+            if (p >= 0) {
+                int len = first[v] + 1;
+                if (len > first[p]) { second[p] = first[p]; first[p] = len; }
+                else if (len > second[p]) second[p] = len;
+            }
+        }
+        return best;
     }
 }
